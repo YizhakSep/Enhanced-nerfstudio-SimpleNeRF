@@ -1,0 +1,21 @@
+Code summary:
+
+We attempt to add the simple-nerf model to one of the nerfstudio-trainable models.
+Firstly, we declared a new method-config in method_configs.py where we added our simeple-nerf model.
+
+Secondly, we implement the model in the file simple_nerf.py
+
+our implementation is as follows:
+
+	- add the augmented networks: 1) lesser positional encoding degree 2) view-invariant radiance network (basically we input to that network only ray origins and and translations, no direction)
+	
+	- use FreeNeRF gradually increasing positional encoding degrees, meaning the degree of the positional encodings of the inputs to the different networks increases as training progresses, such that the  model can learn smooth areas initially and gradually introduce discontinuities and high-frequency space components to the 3D-rendering of the scene.
+	
+	- Use depth-supervision for each of the networks (augmented & course-fine). We chose to apply DS-NeRF depth loss which isn't the one used in the paper of SimpleNeRF, the reason for it is we find that depth loss they offer is too computationally expensive and might bottleneck our improved training time, while DS-NeRF's paper shows its depth-loss to be highly effective at few-view 3D scene reconstruction. Basically instead of reprojecting each pixel to the training view and calculating MSE loss over the patch around the pixel for the rendered view and the training view, we use a simple mathematical loss function between gt depth and rendered training depth.
+	
+	- We also implement the course-fine consistensy loss as well as the losses between the course and the positinal/view augmented models such that the are trained to output similar results.
+	
+	- all of the losses are bundled  together into one loss dictionary, and we weigh the depth-supervision losses by a factor of 1e-3 (hyperparameter)
+	
+	
+	
